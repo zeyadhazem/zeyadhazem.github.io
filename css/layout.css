@@ -62,6 +62,7 @@ ul#nav {
 
    /* center align the menu */
    text-align: center;
+    background: #012;
 }
 ul#nav li {
    position: relative;
