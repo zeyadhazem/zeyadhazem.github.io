@@ -77,7 +77,7 @@ function process(vars){
 
     p = atan2(vars.camX, vars.camZ);
     d = sqrt(vars.camX * vars.camX + vars.camZ * vars.camZ);
-    d -= sin(vars.frameNo / 80) / 120;
+    d -= sin(vars.frameNo / 80) / 50;
     t = sin(vars.frameNo / 200) / 100;
     vars.camX = sin(p + t) * d;
     vars.camZ = cos(p + t) * d;
@@ -415,8 +415,8 @@ function frame(vars) {
         vars.rFrameNo=0;
         vars.camX = 0;
         vars.camY = 0;
-        vars.camZ = -5;
-        vars.yaw=0;
+        vars.camZ = -4;
+        vars.yaw=2;
         vars.pitch=0;
 
 
