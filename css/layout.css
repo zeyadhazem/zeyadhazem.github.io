@@ -91,7 +91,7 @@ ul#nav li a {
 }
 
 ul#nav li a:active { background-color: transparent !important; }
-ul#nav li.current a { color: #00C764; }
+ul#nav li.current a { color: #FF0077; }
 
 body{
     margin:0;
