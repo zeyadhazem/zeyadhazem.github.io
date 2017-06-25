@@ -440,7 +440,7 @@ function frame(vars) {
     draw(vars);
 }
 
-frame();
+
 
 var first = true;
 var fpsInterval, startTime, now, then, elapsed;
@@ -485,9 +485,6 @@ function positionTitleAnimation(index)
     });
 }
 
-startAnimating(0.15);
-
-
 function startAnimating(fps) {
     fpsInterval = 1000 / fps;
     then = Date.now();
@@ -510,6 +507,9 @@ function startAnimating(fps) {
 
         // will fade out the whole DIV that covers the website.
         $("#preloader").delay(300).fadeOut("slow");
+
+            frame();
+            startAnimating(0.15);
 
       });       
 
