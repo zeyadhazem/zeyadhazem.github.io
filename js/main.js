@@ -442,6 +442,59 @@ function frame(vars) {
 
 frame();
 
+var first = true;
+var fpsInterval, startTime, now, then, elapsed;
+
+function positionTitleAnimation(index)
+{
+    var positions = ["Junior Comp Eng Student @McGillU", "Musician", "Amateur filmmaker"];
+    var next = index;
+
+    now = Date.now();
+    elapsed = now - then;
+
+    // if enough time has elapsed, draw the next frame
+    if (elapsed > fpsInterval) {
+        first = false;
+
+        // Get ready for next frame by setting then=now, but...
+        // Also, adjust for fpsInterval not being multiple of 16.67
+        then = now - (elapsed % fpsInterval);
+
+        // draw stuff here
+        var newTitle = document.createElement("span");
+        var title = document.getElementById("position-title");
+        var text = document.createTextNode(positions[index]);
+        var titleParent = title.parentNode;
+
+        newTitle.setAttribute("id", "position-title");
+        newTitle.appendChild(text);
+
+        // Fade Out, Fade In text animation
+        $(".intro-position").fadeOut("quick", function () {
+            titleParent.removeChild(title);
+            titleParent.appendChild(newTitle);
+            $(".intro-position").fadeIn();
+        });
+
+        next = (index + 1) % positions.length;
+    }
+
+    requestAnimationFrame(function() {
+        positionTitleAnimation(next);
+    });
+}
+
+startAnimating(0.4);
+
+
+function startAnimating(fps) {
+    fpsInterval = 1000 / fps;
+    then = Date.now();
+    startTime = then;
+    positionTitleAnimation(0);
+}
+
 
 (function($) {
 
