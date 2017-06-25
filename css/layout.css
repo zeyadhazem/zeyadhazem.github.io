@@ -51,7 +51,7 @@ body { background: #0f0f0f; }
    left: 0;
    top: 0;
 }
-.opaque { background-color: #333; }
+.opaque { background-color: #012; }
 
 /* hide toggle button */
 #nav-wrap > a.mobile-btn { display: none; }
@@ -62,7 +62,6 @@ ul#nav {
 
    /* center align the menu */
    text-align: center;
-    background: #012;
 }
 ul#nav li {
    position: relative;
