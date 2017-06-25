@@ -454,7 +454,7 @@ function positionTitleAnimation(index)
     elapsed = now - then;
 
     // if enough time has elapsed, draw the next frame
-    if (elapsed > fpsInterval) {
+    if (elapsed > fpsInterval || first) {
         first = false;
 
         // Get ready for next frame by setting then=now, but...
@@ -485,7 +485,7 @@ function positionTitleAnimation(index)
     });
 }
 
-startAnimating(0.4);
+startAnimating(0.15);
 
 
 function startAnimating(fps) {
