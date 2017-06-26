@@ -509,7 +509,7 @@ function startAnimating(fps) {
         $("#preloader").delay(300).fadeOut("slow");
 
             frame();
-            startAnimating(0.15);
+            startAnimating(0.2);
 
       });       
 
