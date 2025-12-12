@@ -14,7 +14,7 @@ export const projects = [
     model: '/iphone_16_pro_max.glb',
     scale: 1.5, // Made iPhone larger
     position: [0, 0, 0], // Centered position for iPhone
-    color: '#0071e3',
+    color: '#ccaa00',
     year: '2024'
   },
   {
