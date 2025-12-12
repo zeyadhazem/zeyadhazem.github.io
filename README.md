@@ -17,6 +17,9 @@ zeyadhazem.github.io/
 │   │   └── ...
 │   ├── package.json       # Dependencies and scripts
 │   └── README.md          # Create React App documentation
+├── hooks/                 # Git hooks (version controlled)
+│   └── pre-push           # Pre-push hook for automatic deployment
+├── setup-hooks.sh         # Script to install git hooks
 ├── .gitignore             # Git ignore rules
 └── README.md              # This file
 ```
@@ -37,24 +40,56 @@ zeyadhazem.github.io/
    cd zeyadhazem.github.io
    ```
 
-2. Navigate to the client directory and install dependencies:
+2. Set up git hooks for automatic deployment:
+   ```bash
+   ./setup-hooks.sh
+   ```
+
+3. Navigate to the client directory and install dependencies:
    ```bash
    cd client
    npm install
    ```
 
-3. Start the development server:
+4. Start the development server:
    ```bash
    npm start
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view the website in your browser.
+5. Open [http://localhost:3000](http://localhost:3000) to view the website in your browser.
 
 ## 🚀 Deployment
 
-### **Important: Deploying Changes to the Live Website**
+### **Automatic Deployment with Git Hook**
 
-To deploy new changes to your public website, follow these steps:
+This repository is configured with a **git pre-push hook** that automatically deploys your changes when you push to the `master` or `main` branch.
+
+**How it works:**
+- When you push to `master`/`main`, the hook automatically runs `npm run deploy`
+- Your changes are built and deployed to GitHub Pages
+- The website updates at [https://zeyadhazem.github.io/](https://zeyadhazem.github.io/)
+
+**To deploy your changes:**
+1. Make your changes and commit them:
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   ```
+
+2. Push to master (deployment happens automatically):
+   ```bash
+   git push origin master
+   ```
+
+The hook will:
+- ✅ Detect you're pushing to master/main
+- 🚀 Automatically run `npm run deploy` from the client directory
+- 📦 Build and deploy your React app to GitHub Pages
+- 🌐 Make your changes live within minutes
+
+### **Manual Deployment (Alternative)**
+
+If you prefer to deploy manually or need to deploy without pushing:
 
 1. **Navigate to the client directory:**
    ```bash
@@ -66,11 +101,6 @@ To deploy new changes to your public website, follow these steps:
    npm run deploy
    ```
 
-This command will:
-- Build the production version of your React app
-- Deploy it to GitHub Pages using the `gh-pages` branch
-- Make your changes live at [https://zeyadhazem.github.io/](https://zeyadhazem.github.io/)
-
 ### Deployment Process Details
 
 The deployment process uses the following npm scripts defined in `client/package.json`:
@@ -78,7 +108,7 @@ The deployment process uses the following npm scripts defined in `client/package
 - `predeploy`: Automatically runs `npm run build` before deployment
 - `deploy`: Uses `gh-pages` to deploy the build folder to GitHub Pages
 
-**Note:** Make sure all your changes are committed to git before deploying, as this helps track what version is currently deployed.
+**Note:** The git hook ensures that deployments only happen when pushing to the main branch, keeping your development workflow clean and preventing accidental deployments from feature branches.
 
 ## 🧪 Available Scripts
 
@@ -101,9 +131,17 @@ In the `client/` directory, you can run:
 ## 📝 Making Changes
 
 1. Make your changes in the `client/src/` directory
-2. Test locally with `npm start`
-3. When ready to publish, run `npm run deploy` from the `client/` directory
-4. Your changes will be live within a few minutes
+2. Test locally with `npm start` (from the `client/` directory)
+3. When ready to publish:
+   ```bash
+   git add .
+   git commit -m "Describe your changes"
+   git push origin master
+   ```
+4. The git hook will automatically deploy your changes to GitHub Pages
+5. Your changes will be live at [https://zeyadhazem.github.io/](https://zeyadhazem.github.io/) within a few minutes
+
+**Note:** The automated deployment only triggers when pushing to the `master` or `main` branch. Pushes to other branches will not trigger deployment.
 
 ## 🤝 Contributing
 

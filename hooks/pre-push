@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Git pre-push hook
+# This hook runs npm run deploy when pushing to master branch
+
+# Read the remote name and URL from stdin
+remote="$1"
+url="$2"
+
+# Get the current branch name
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Check if we're pushing to master or main branch
+if [ "$current_branch" = "master" ] || [ "$current_branch" = "main" ]; then
+    echo "🚀 Detected push to $current_branch branch. Running deployment..."
+    
+    # Navigate to client directory and run deploy
+    cd client
+    
+    # Check if package.json exists
+    if [ ! -f "package.json" ]; then
+        echo "❌ Error: package.json not found in client directory"
+        exit 1
+    fi
+    
+    # Check if npm is available
+    if ! command -v npm &> /dev/null; then
+        echo "❌ Error: npm is not installed or not in PATH"
+        exit 1
+    fi
+    
+    # Run the deploy command
+    echo "📦 Running npm run deploy..."
+    npm run deploy
+    
+    # Check if deploy was successful
+    if [ $? -eq 0 ]; then
+        echo "✅ Deployment completed successfully!"
+        echo "🌐 Your changes will be live at https://zeyadhazem.github.io/ shortly"
+    else
+        echo "❌ Deployment failed!"
+        echo "❌ Push aborted. Please fix the deployment issues and try again."
+        exit 1
+    fi
+    
+    # Return to root directory
+    cd ..
+else
+    echo "ℹ️  Pushing to $current_branch branch. Skipping deployment (only deploys on master/main)."
+fi
+
+exit 0
