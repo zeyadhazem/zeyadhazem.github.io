@@ -1,0 +1,238 @@
+.projects {
+  background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.projects-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xxxl);
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.projects.animate-in .projects-header {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.projects-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+}
+
+.project-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xxxl);
+  align-items: center;
+  opacity: 0;
+  transform: translateY(60px);
+  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: var(--spacing-xxl);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--accent-color, #0071e3)10, transparent 50%);
+  opacity: 0;
+  transition: opacity var(--transition-standard);
+}
+
+.project-card:hover::before {
+  opacity: 1;
+}
+
+.project-card.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.project-card.reverse {
+  direction: rtl;
+}
+
+.project-card.reverse > * {
+  direction: ltr;
+}
+
+.project-content {
+  position: relative;
+  z-index: 2;
+}
+
+.project-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.project-year {
+  display: inline-block;
+  font-size: var(--font-size-body-reduced);
+  font-weight: 600;
+  color: var(--accent-color, var(--color-accent));
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 12px;
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.project-title {
+  font-size: clamp(32px, 5vw, var(--font-size-title-1));
+  font-weight: 700;
+  line-height: 1.08333;
+  letter-spacing: -0.025em;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.project-subtitle {
+  font-size: var(--font-size-body-large);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.project-description {
+  font-size: var(--font-size-body-large);
+  line-height: 1.47059;
+  letter-spacing: -0.022em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+  max-width: 500px;
+}
+
+.project-highlights {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.highlight-item {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
+  transition: color var(--transition-standard);
+}
+
+.highlight-item:hover {
+  color: var(--color-text-primary);
+}
+
+.highlight-bullet {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-color, var(--color-accent));
+  border-radius: 50%;
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.project-visual {
+  height: 500px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.model-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.visual-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  opacity: 0.3;
+  transition: opacity var(--transition-standard);
+}
+
+.project-card:hover .visual-overlay {
+  opacity: 0.5;
+}
+
+@media (max-width: 1024px) {
+  .project-card {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+    text-align: center;
+  }
+  
+  .project-card.reverse {
+    direction: ltr;
+  }
+  
+  .project-visual {
+    order: -1;
+    height: 400px;
+  }
+  
+  .projects-grid {
+    gap: var(--spacing-xxxl);
+  }
+}
+
+@media (max-width: 768px) {
+  .project-card {
+    padding: var(--spacing-lg);
+    margin: 0 -20px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .project-visual {
+    height: 300px;
+    border-radius: 16px;
+  }
+  
+  .projects-grid {
+    gap: var(--spacing-xxl);
+  }
+  
+  .projects-header {
+    margin-bottom: var(--spacing-xxl);
+  }
+}
+
+@media (max-width: 480px) {
+  .project-description {
+    max-width: 100%;
+  }
+  
+  .project-visual {
+    height: 250px;
+  }
+}
+
+/* Animation delays for staggered effect */
+.project-card:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.project-card:nth-child(2) {
+  transition-delay: 0.2s;
+}
+
+.project-card:nth-child(3) {
+  transition-delay: 0.3s;
+}
