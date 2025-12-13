@@ -35,7 +35,7 @@ const Hero = () => {
               <span className="hero-title-line">Zeyad Saleh</span>
             </h1>
             <p className="hero-subtitle">
-              Senior Software Engineer at Apple
+              Staff Software Engineer at Apple
             </p>
             <p className="hero-description">
               Leading media architecture for Apple Intelligence and driving the future of Siri.
@@ -60,7 +60,7 @@ const Hero = () => {
             <div className="image-wrapper">
               <img
                 src={process.env.PUBLIC_URL + '/ProfilePhoto.JPG'}
-                alt="Zeyad Saleh - Senior Software Engineer at Apple"
+                alt="Zeyad Saleh - Staff Software Engineer at Apple"
                 className="profile-image"
               />
             </div>

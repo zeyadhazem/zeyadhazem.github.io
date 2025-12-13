@@ -55,7 +55,7 @@ const Footer = () => {
               <h3 className="footer-title">Apple</h3>
               <ul className="footer-links">
                 <li>
-                  <span className="footer-text">Senior Software Engineer</span>
+                  <span className="footer-text">Staff Software Engineer</span>
                 </li>
                 <li>
                   <span className="footer-text">Apple Intelligence</span>

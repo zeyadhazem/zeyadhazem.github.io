@@ -112,6 +112,12 @@
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-lg);
   max-width: 500px;
+  padding-left: var(--spacing-lg);
+  border-left: 4px solid var(--accent-color, var(--color-accent));
+  position: relative;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.02), transparent);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: 2px;
 }
 
 .project-highlights {

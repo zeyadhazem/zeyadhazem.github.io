@@ -38,7 +38,7 @@ const ProjectCard = ({ project, index }) => {
   return (
     <div
       ref={cardRef}
-      className={`project-card ${index % 2 === 1 ? 'reverse' : ''}`}
+      className={`project-card ${index % 2 === 1 && index !== 2 ? 'reverse' : ''}`}
       style={{ '--accent-color': project.color }}
     >
       <div className="project-content">
@@ -60,7 +60,7 @@ const ProjectCard = ({ project, index }) => {
       <div className="project-visual">
         <div className="model-container">
           <Canvas camera={{
-            position: project.title === 'HomePod Evolution' ? [0, 5, 3] : [0, 0, 5],
+            position: project.cameraPosition,
             fov: 45
           }}>
             <Suspense fallback={<Loader />}>
