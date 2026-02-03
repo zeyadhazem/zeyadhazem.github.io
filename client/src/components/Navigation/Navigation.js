@@ -37,7 +37,7 @@ const Navigation = () => {
             Projects
           </button>
           <a
-            href="/Zeyad_Saleh_Resume_2025(2).pdf"
+            href="/Zeyad_Saleh_Resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="nav-link resume-link"

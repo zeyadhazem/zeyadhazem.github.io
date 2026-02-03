@@ -44,7 +44,7 @@ const Footer = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="/Zeyad_Saleh_Resume_2025(2).pdf" target="_blank" rel="noopener noreferrer" className="footer-link">
+                  <a href="/Zeyad_Saleh_Resume.pdf" target="_blank" rel="noopener noreferrer" className="footer-link">
                     Resume
                   </a>
                 </li>
