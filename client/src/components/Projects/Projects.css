@@ -161,6 +161,96 @@
   z-index: 2;
 }
 
+/* OrbitControls sets `touch-action: none` as an inline style on the element it
+   connects to (three-stdlib/controls/OrbitControls.js:300), and only restores
+   "auto" on dispose (:309). react-three-fiber connects it to its outer
+   container div, not the <canvas> — so of the three selectors below only
+   `.model-container div` currently overrides anything; the other two are
+   defensive in case r3f's DOM nesting changes. With three 500px-tall cards
+   that are full-bleed on mobile (.project-card { margin: 0 -20px }), a touch
+   swipe starting over a card was swallowed by the orbit controls and the page
+   could not be scrolled. `pan-y` alone would still block pinch-zoom, which is
+   an accessibility regression, so pinch-zoom is listed explicitly. !important
+   is required because this has to beat an inline style. */
+.model-container,
+.model-container div,
+.model-container canvas {
+  touch-action: pan-y pinch-zoom !important;
+}
+
+/* Fills the box .project-visual already fixes (500 / 400 / 300 / 250px by
+   breakpoint) so the canvas area is never blank while several MB of .glb
+   downloads, and retires once the model resolves. Greys are the existing
+   --color-bg-secondary / --color-bg-tertiary. */
+.model-skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0) 30%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0) 70%
+    ),
+    radial-gradient(circle at 50% 45%, var(--color-bg-tertiary) 0%, var(--color-bg-secondary) 60%, transparent 100%);
+  background-size: 250% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  animation: modelSkeletonSweep 1.8s ease-in-out infinite;
+  opacity: 1;
+  transition: opacity var(--transition-emphasized);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Stop the sweep and take the element out of paint once the model is up.
+   `background-position` is not compositor-accelerated, so leaving it animating
+   behind opacity: 0 would repaint three full-size elements on the main thread
+   for the life of the page, competing with three live WebGL contexts.
+   visibility is transitioned with a delay so the fade still plays first. */
+.model-skeleton.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  animation: none;
+  transition: opacity var(--transition-emphasized), visibility 0s linear 0.5s;
+}
+
+/* Model failed to load: hold the exact box with a still block rather than a
+   shimmer that would promise a model which is never coming. */
+.model-skeleton.is-static {
+  animation: none;
+}
+
+@keyframes modelSkeletonSweep {
+  from {
+    background-position: 150% 0, 0 0;
+  }
+  to {
+    background-position: -50% 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .model-skeleton {
+    animation: none;
+  }
+}
+
+.model-loader-text {
+  font-size: var(--font-size-body-reduced);
+  font-weight: 500;
+  letter-spacing: -0.022em;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .model-skeleton {
+    border-radius: 16px;
+  }
+}
+
 .visual-overlay {
   position: absolute;
   top: 0;

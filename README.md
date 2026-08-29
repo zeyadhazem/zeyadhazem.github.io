@@ -11,12 +11,13 @@ Visit the live website at: [https://zeyadhazem.github.io/](https://zeyadhazem.gi
 ```
 zeyadhazem.github.io/
 ├── client/                 # React application
-│   ├── public/            # Static assets
+│   ├── public/            # Static assets (photos, 3D models, icons, HDR environment)
+│   ├── assets-source/     # Full-resolution originals, not deployed
 │   ├── src/               # Source code
 │   │   ├── components/    # React components
 │   │   └── ...
 │   ├── package.json       # Dependencies and scripts
-│   └── README.md          # Create React App documentation
+│   └── README.md          # Client app notes
 ├── hooks/                 # Git hooks (version controlled)
 │   └── pre-push           # Pre-push hook for automatic deployment
 ├── setup-hooks.sh         # Script to install git hooks

@@ -171,6 +171,29 @@
   animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
 }
 
+/* Blur-up placeholder. Inset by 4px so it lands exactly inside the photo's own
+   4px border, and it uses the same cover/position/grayscale as .profile-image,
+   so the real photo replaces it pixel-for-pixel with no shift at any breakpoint. */
+.image-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background-image: var(--placeholder);
+  background-size: cover;
+  background-position: 5% 25%;
+  background-repeat: no-repeat;
+  filter: grayscale(100%);
+  z-index: 1;
+}
+
+/* display: contents removes the <picture> box entirely, so the <img>'s
+   containing block stays .image-wrapper exactly as before the <picture> was
+   introduced, and its width/height: 100% resolve identically. */
+.image-wrapper picture {
+  display: contents;
+}
+
 .profile-image {
   width: 100%;
   height: 100%;
@@ -182,6 +205,11 @@
   position: relative;
   z-index: 2;
   filter: grayscale(100%);
+  opacity: 0;
+}
+
+.profile-image.is-loaded {
+  opacity: 1;
 }
 
 .profile-image:hover {

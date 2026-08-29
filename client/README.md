@@ -1,70 +1,40 @@
-# Getting Started with Create React App
+# Client
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The React front end for [zeyadhazem.github.io](https://zeyadhazem.github.io/). Built with
+Create React App (`react-scripts` 5), React 19, three.js via
+`@react-three/fiber` + `@react-three/drei`, and GSAP.
 
-## Available Scripts
+Deployment is driven from the repository root — see the top-level `README.md`. Pushing to
+`master` triggers a pre-push hook that runs `npm run deploy`.
 
-In the project directory, you can run:
+## Scripts
 
-### `npm start`
+| Command | What it does |
+|---|---|
+| `npm start` | Dev server on [localhost:3000](http://localhost:3000) |
+| `npm test` | Jest + React Testing Library |
+| `npm run build` | Production bundle into `build/` |
+| `npm run deploy` | Builds, then publishes `build/` to the `gh-pages` branch |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Layout
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+public/          Everything served verbatim. Photo derivatives, the three .glb
+                 models, the HDR environment map, icons, manifest, resume PDF.
+public/hdri/     Self-hosted environment map for the 3D scenes.
+assets-source/   Full-resolution photo and model originals. Deliberately outside
+                 public/ so they are kept in git but never deployed.
+src/components/  One folder per section: Navigation, Hero, About, Projects, Footer.
+src/components/constants.js  Project copy plus each model's path, scale and camera.
+```
 
-### `npm test`
+## Asset conventions
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- **Photos** are served through `<picture>` as AVIF → WebP → JPEG, sized to 2x the
+  largest box the CSS ever paints them at. Each carries `width`/`height` and sits over an
+  inlined blur placeholder so the box is filled from first render.
+- **Models** are glTF-binary, compressed with `gltf-transform` using only extensions the
+  bundled loader handles natively (`EXT_texture_webp`, `KHR_mesh_quantization`) — no
+  external decoder, no CDN. Their fetch is deferred until the card nears the viewport.
+- **Regenerating a derivative** means re-running the resize/re-encode against the original
+  in `assets-source/`, not editing the file in `public/`.

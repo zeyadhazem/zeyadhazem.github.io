@@ -1,5 +1,8 @@
-/* Apple SF Pro Font System */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+/* Apple SF Pro Font System.
+   The Inter webfont is requested from public/index.html via <link rel="stylesheet">
+   with preconnect, rather than an @import here: an @import inside a stylesheet is
+   only discovered after that stylesheet has downloaded and parsed, which serialises
+   the font request behind the CSS bundle. Same URL, same font, one round trip earlier. */
 
 * {
   margin: 0;

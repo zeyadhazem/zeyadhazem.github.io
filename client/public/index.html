@@ -2,42 +2,66 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
+
+    <title>Zeyad Saleh — Staff Software Engineer at Apple</title>
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Zeyad Saleh is a Staff Software Engineer at Apple leading media architecture for Apple Intelligence and driving the future of Siri."
     />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+    <meta name="author" content="Zeyad Saleh" />
+    <link rel="canonical" href="https://zeyadhazem.github.io/" />
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- The hero photo is the LCP element, but React renders it, so the preload
+         scanner cannot see it in this markup. Preload only the AVIF: it is the
+         first <source> in the <picture>, so AVIF-capable browsers reuse this
+         exact response, and browsers without AVIF skip the preload entirely. -->
+    <link
+      rel="preload"
+      as="image"
+      href="%PUBLIC_URL%/ProfilePhoto-800.avif"
+      type="image/avif"
+      fetchpriority="high"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Zeyad Saleh" />
+    <meta property="og:url" content="https://zeyadhazem.github.io/" />
+    <meta property="og:title" content="Zeyad Saleh — Staff Software Engineer at Apple" />
+    <meta
+      property="og:description"
+      content="Leading media architecture for Apple Intelligence and driving the future of Siri."
+    />
+    <meta property="og:image" content="https://zeyadhazem.github.io/ProfilePhoto-800.jpg" />
+    <meta property="og:image:width" content="800" />
+    <meta property="og:image:height" content="1089" />
+    <meta property="og:image:alt" content="Zeyad Saleh" />
+    <meta property="og:locale" content="en_US" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Zeyad Saleh — Staff Software Engineer at Apple" />
+    <meta
+      name="twitter:description"
+      content="Leading media architecture for Apple Intelligence and driving the future of Siri."
+    />
+    <meta name="twitter:image" content="https://zeyadhazem.github.io/ProfilePhoto-800.jpg" />
+    <meta name="twitter:image:alt" content="Zeyad Saleh" />
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>
