@@ -21,13 +21,16 @@
     <!-- The hero photo is the LCP element, but React renders it, so the preload
          scanner cannot see it in this markup. Preload only the AVIF: it is the
          first <source> in the <picture>, so AVIF-capable browsers reuse this
-         exact response, and browsers without AVIF skip the preload entirely. -->
+         exact response, and browsers without AVIF skip the preload entirely.
+         imagesrcset/imagesizes must mirror the component's srcset/sizes exactly,
+         or the browser preloads one width and then fetches another. -->
     <link
       rel="preload"
       as="image"
-      href="%PUBLIC_URL%/ProfilePhoto-800.avif"
       type="image/avif"
       fetchpriority="high"
+      imagesrcset="%PUBLIC_URL%/ProfilePhoto-200.avif 200w, %PUBLIC_URL%/ProfilePhoto-400.avif 400w, %PUBLIC_URL%/ProfilePhoto-600.avif 600w, %PUBLIC_URL%/ProfilePhoto-800.avif 800w"
+      imagesizes="(max-width: 480px) 200px, (max-width: 768px) 250px, (max-width: 1024px) 300px, 400px"
     />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />

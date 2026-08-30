@@ -1,49 +1,21 @@
-import React, { Suspense, useRef, useEffect, useState, useCallback, Component } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { useGLTF, OrbitControls, Stage } from '@react-three/drei';
+import React, { Component, Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { projects } from '../constants';
 import './Projects.css';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-gsap.registerPlugin(ScrollTrigger);
 
-// Self-hosted copy of the environment map drei's environment="city" preset uses.
-// The preset resolves to https://raw.githack.com/pmndrs/drei-assets/<sha>/hdri/
-// (useEnvironment.js:8) — free, rate-limited third-party hosting on the critical
-// path of every card. Byte-identical file, served from our own origin.
-const ENVIRONMENT = { files: process.env.PUBLIC_URL + '/hdri/potsdamer_platz_1k.hdr' };
-
-// The models are Draco-compressed, which needs a decoder. drei defaults that to
-// https://www.gstatic.com/draco/... (Gltf.js:8) — a third-party CDN we do not
-// want on a first-party site. Passing a string as useGLTF's second argument is
-// drei's own supported override (Gltf.js:18,
-// `dracoLoader.setDecoderPath(typeof useDraco === 'string' ? useDraco : decoderPath)`),
-// so this points DRACOLoader at public/draco/ with no monkey-patching.
-// Trailing slash is required: DRACOLoader concatenates decoderPath + filename.
-export const DRACO_DECODER_PATH = process.env.PUBLIC_URL + '/draco/';
-
-const Model = ({ modelPath, scale = 1, position = [0, 0, 0] }) => {
-  const { scene } = useGLTF(modelPath, DRACO_DECODER_PATH);
-  return <primitive object={scene} scale={scale} position={position} />;
-};
-
-// Rendered as a Suspense child, so it can only mount once the model's fetch has
-// resolved. That is the signal used to retire the placeholder and advance the
-// load sequence to the next model.
-const ModelReady = ({ onReady }) => {
-  useEffect(() => {
-    onReady();
-  }, [onReady]);
-  return null;
-};
+// The 3D stack (three, @react-three/*, DRACOLoader) lives in a separate chunk so
+// it is not in the critical path for first paint. Nothing above this section
+// waits on it. `gsap`/`ScrollTrigger` used to be imported here too and were dead
+// code — registerPlugin was called and gsap was never used again — so they are
+// gone entirely rather than merely deferred.
+const ModelCanvas = lazy(() => import('./ModelCanvas'));
 
 // react-three-fiber re-throws anything the canvas subtree throws into the outer
 // React tree (react-three-fiber.esm.js:62, `if (error) throw error`). Without a
-// boundary a single failed asset fetch unmounts the whole React root and the
-// page goes blank. Scoped to one canvas so a failure costs one card, not the
-// site. onFail also advances the load sequence, so one dead model cannot freeze
-// every model behind it. Exported for direct testing: in jsdom the canvas never
-// gets a non-zero rect, so no real model load can be provoked through <Canvas>.
+// boundary a single failed asset unmounts the whole React root and the page goes
+// blank. Scoped to one card so a failure costs one card, not the site. It also
+// catches a failed chunk import, so a dropped connection degrades to the
+// placeholder. Exported for direct testing: in jsdom the canvas never gets a
+// non-zero rect, so no real model load can be provoked through <Canvas>.
 export class CanvasErrorBoundary extends Component {
   state = { failed: false };
 
@@ -62,35 +34,18 @@ export class CanvasErrorBoundary extends Component {
   }
 }
 
-const ProjectCard = ({ project, index, canLoad, onSettled }) => {
+const ProjectCard = ({ project, index, modelsStarted }) => {
   const [modelReady, setModelReady] = useState(false);
   const [modelFailed, setModelFailed] = useState(false);
-  // The chain must advance exactly once per model, on success or on failure.
-  const settledRef = useRef(false);
-
-  const settle = useCallback(() => {
-    if (settledRef.current) return;
-    settledRef.current = true;
-    onSettled?.(index);
-  }, [onSettled, index]);
-
-  // Stable identity so <ModelReady>'s effect does not re-run on every render.
-  const handleModelReady = useCallback(() => {
-    setModelReady(true);
-    settle();
-  }, [settle]);
-
+  const handleModelReady = useCallback(() => setModelReady(true), []);
   const handleModelFail = useCallback(() => {
     setModelFailed(true);
     setModelReady(false);
-    settle();
-  }, [settle]);
+  }, []);
 
-  // No IntersectionObserver here on purpose. The card used to reveal itself by
-  // adding .animate-in from an observer callback; the card's copy is now
-  // visible from first paint (see Projects.css) so there is nothing to reveal,
-  // and no JS stands between a visitor and the text.
-
+  // No IntersectionObserver and no reveal animation on the card itself. The
+  // card's copy is visible from first paint (see Projects.css) so no JS stands
+  // between a visitor and the text, and it cannot be outrun by its own graphic.
   return (
     <div
       className={`project-card ${index % 2 === 1 && index !== 2 ? 'reverse' : ''}`}
@@ -118,35 +73,11 @@ const ProjectCard = ({ project, index, canLoad, onSettled }) => {
             className={`model-placeholder${modelReady ? ' is-hidden' : ''}${modelFailed ? ' is-failed' : ''}`}
             aria-hidden="true"
           />
-          {canLoad && !modelFailed && (
+          {modelsStarted && !modelFailed && (
             <CanvasErrorBoundary onFail={handleModelFail}>
-              <Canvas camera={{
-                position: project.cameraPosition,
-                fov: 45
-              }}>
-                {/* No fallback element: the flat .model-placeholder behind the
-                    canvas already holds the box at every breakpoint. */}
-                <Suspense fallback={null}>
-                  <Stage environment={ENVIRONMENT} intensity={0.8} adjustCamera={false}>
-                    <Model
-                      modelPath={project.model}
-                      scale={project.scale}
-                      position={project.position}
-                      rotation={project.rotation}
-                    />
-                  </Stage>
-                  <OrbitControls
-                    enableZoom={false}
-                    autoRotate
-                    autoRotateSpeed={2}
-                    enablePan={false}
-                    maxPolarAngle={project.title === 'HomePod Evolution' ? Math.PI / 2 : Math.PI / 2}
-                    minPolarAngle={project.title === 'HomePod Evolution' ? Math.PI / 3 : Math.PI / 3}
-                    target={project.title === 'HomePod Evolution' ? [0, 0, 0] : [0, 0, 0]}
-                  />
-                  <ModelReady onReady={handleModelReady} />
-                </Suspense>
-              </Canvas>
+              <Suspense fallback={null}>
+                <ModelCanvas project={project} onReady={handleModelReady} />
+              </Suspense>
             </CanvasErrorBoundary>
           )}
         </div>
@@ -156,8 +87,9 @@ const ProjectCard = ({ project, index, canLoad, onSettled }) => {
   );
 };
 
-const Projects = ({ loadedModelCount = projects.length, onModelSettled }) => {
+const Projects = () => {
   const sectionRef = useRef(null);
+  const [modelsStarted, setModelsStarted] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -178,6 +110,32 @@ const Projects = ({ loadedModelCount = projects.length, onModelSettled }) => {
     return () => observer.disconnect();
   }, []);
 
+  // Models start unconditionally on the first frame after the initial paint.
+  // No scroll requirement: the owner asked for the 3D models to load "even if
+  // the user did not scroll down to that yet", so there is deliberately no
+  // IntersectionObserver anywhere in the model path.
+  //
+  // Double requestAnimationFrame is the trigger: the first callback runs before
+  // the upcoming paint, the second after it has been committed, so the dynamic
+  // import() of the 3D chunk and the .glb fetches are issued once the hero and
+  // About are already on screen and their requests already in flight. That is
+  // what keeps this cheap — priority ordering, not gating.
+  //
+  // Deliberately not window.load: that would couple model loading to the hero
+  // photo finishing, which is exactly the coupling this round removed.
+  // Deliberately not setTimeout: an arbitrary delay is not a paint signal.
+  useEffect(() => {
+    let outer = 0;
+    let inner = 0;
+    outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setModelsStarted(true));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, []);
+
   return (
     <section id="projects" className="projects section" ref={sectionRef}>
       <div className="container">
@@ -193,8 +151,7 @@ const Projects = ({ loadedModelCount = projects.length, onModelSettled }) => {
               key={project.id}
               project={project}
               index={index}
-              canLoad={index < loadedModelCount}
-              onSettled={onModelSettled}
+              modelsStarted={modelsStarted}
             />
           ))}
         </div>

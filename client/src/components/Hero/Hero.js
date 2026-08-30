@@ -1,22 +1,32 @@
 import React, { useEffect, useRef } from 'react';
 import './Hero.css';
-import { useImageLoadSignal } from '../../loadSequence';
+import { useImageLoadState } from '../../useImageLoadState';
 
-// 20x27 blurred JPEG of ProfilePhoto, inlined so the reserved 400x400 circle is
-// painted on first render instead of sitting empty until the photo arrives.
+// 20x27 blurred JPEG of ProfilePhoto, inlined so the reserved circle is painted
+// on first render instead of sitting empty until the photo arrives.
 const PROFILE_PLACEHOLDER =
   'data:image/jpeg;base64,/9j/2wBDABMNDhEODBMRDxEVFBMXHTAfHRoaHToqLCMwRT1JR0Q9Q0FMVm1dTFFoUkFDX4JgaHF1e3x7SlyGkIV3j214e3b/2wBDARQVFR0ZHTgfHzh2T0NPdnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnb/wAARCAAbABQDASIAAhEBAxEB/8QAGgABAAIDAQAAAAAAAAAAAAAAAAQFAgMGB//EAB8QAAICAgIDAQAAAAAAAAAAAAECAAMEEQVBEhMhMf/EABcBAAMBAAAAAAAAAAAAAAAAAAABAwL/xAAZEQADAQEBAAAAAAAAAAAAAAAAAREhAiL/2gAMAwEAAhEDEQA/AOntYV1lj1K+jMN7kEDXUx5XmcbHqasOGc/NSDx93rPsu0qnuTZXmNMtSv2IW1HHkrAgxAR55Y7WWeTEsTN7ZdjUrSzHQjAAOUAfyMwAZLaGvs1dhGeaTMe3LrqCrvXUSKt9oXQcxDR1H//Z';
 
-const HERO_PHOTO_FALLBACK = process.env.PUBLIC_URL + '/ProfilePhoto-800.jpg';
+const U = process.env.PUBLIC_URL;
 
-const Hero = ({ onSettled }) => {
+// srcset widths are the measured rendered box widths x dpr2. `.image-wrapper` is
+// 400px, stepping to 300 / 250 / 200 at the 1024 / 768 / 480 breakpoints
+// (Hero.css), so a 2x screen needs at most 800px and a phone needs 400px.
+// Verified live: 336-480px viewport -> 200px box, 600-768 -> 250, 820-1024 -> 300,
+// >=1100 -> 400.
+const HERO_SIZES =
+  '(max-width: 480px) 200px, (max-width: 768px) 250px, (max-width: 1024px) 300px, 400px';
+const heroSet = (ext) =>
+  [200, 400, 600, 800].map((w) => `${U}/ProfilePhoto-${w}.${ext} ${w}w`).join(', ');
+const HERO_PHOTO_FALLBACK = `${U}/ProfilePhoto-800.jpg`;
+
+const Hero = () => {
   const heroRef = useRef(null);
-  // Step 0 of the load sequence, and the LCP element: it is always active, is
-  // preloaded from index.html and keeps fetchpriority="high". Nothing gates it.
-  const { imgRef, loaded: photoLoaded, handleLoad, handleError } = useImageLoadSignal(
-    true,
-    onSettled,
-    HERO_PHOTO_FALLBACK
+  // The LCP element. Preloaded from index.html with a matching imagesrcset and
+  // fetchpriority="high"; nothing gates it and nothing waits on it.
+  const { imgRef, loaded: photoLoaded, handleLoad } = useImageLoadState(
+    HERO_PHOTO_FALLBACK,
+    heroSet('jpg')
   );
 
   useEffect(() => {
@@ -77,18 +87,15 @@ const Hero = ({ onSettled }) => {
               style={{ '--placeholder': `url("${PROFILE_PLACEHOLDER}")` }}
             >
               <picture>
-                <source
-                  srcSet={process.env.PUBLIC_URL + '/ProfilePhoto-800.avif'}
-                  type="image/avif"
-                />
-                <source
-                  srcSet={process.env.PUBLIC_URL + '/ProfilePhoto-800.webp'}
-                  type="image/webp"
-                />
+                <source srcSet={heroSet('avif')} sizes={HERO_SIZES} type="image/avif" />
+                <source srcSet={heroSet('webp')} sizes={HERO_SIZES} type="image/webp" />
                 <img
                   ref={imgRef}
                   /* src is assigned in a layout effect, after this <img> is
-                     inside the <picture>. See useImageLoadSignal. */
+                     inside the <picture>. See useImageLoadState. There is no
+                     onError by design: on failure the photo stays transparent
+                     and the blur placeholder shows, rather than a broken glyph. */
+                  sizes={HERO_SIZES}
                   alt="Zeyad Saleh - Staff Software Engineer at Apple"
                   className={`profile-image${photoLoaded ? ' is-loaded' : ''}`}
                   width="800"
@@ -96,7 +103,6 @@ const Hero = ({ onSettled }) => {
                   decoding="async"
                   fetchPriority="high"
                   onLoad={handleLoad}
-                  onError={handleError}
                 />
               </picture>
             </div>

@@ -1,20 +1,32 @@
 import React, { useEffect, useRef } from 'react';
 import './About.css';
-import { useImageLoadSignal } from '../../loadSequence';
+import { useImageLoadState } from '../../useImageLoadState';
 
 // 20x27 blurred JPEG of AboutMePhoto, inlined so the reserved square is painted
 // on first render instead of sitting empty until the photo arrives.
 const ABOUT_PLACEHOLDER =
   'data:image/jpeg;base64,/9j/2wBDABMNDhEODBMRDxEVFBMXHTAfHRoaHToqLCMwRT1JR0Q9Q0FMVm1dTFFoUkFDX4JgaHF1e3x7SlyGkIV3j214e3b/2wBDARQVFR0ZHTgfHzh2T0NPdnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnb/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAUEBgECA//EACUQAAIBBAECBwEAAAAAAAAAAAECAAMEBRESEyEiMTJBUXGRof/EABYBAQEBAAAAAAAAAAAAAAAAAAIBA//EABkRAAMBAQEAAAAAAAAAAAAAAAABAhExA//aAAwDAQACEQMRAD8Ahrma1OqQQGG42x+QW9fgV4n5PlFDYiuz8tgCdqNF7cFVJBllO+BqlHSyCgrDfWH7CJEt6/Eaq/2Ez0WM0tr8dHxglhI7XyvUOyFG5nDgNckMNiKsqAt9VC9hyi8qS3VpLTpLHhYA9DQ5V++vaERL6R9QmLHp/9k=';
 
-const ABOUT_PHOTO_FALLBACK = process.env.PUBLIC_URL + '/AboutMePhoto-1000.jpg';
+const U = process.env.PUBLIC_URL;
 
-const About = ({ canLoad = true, onSettled }) => {
+// `.image-container` is width:100% capped at 500px, dropping to 400px at the
+// 1024 breakpoint and 250px at 480 (About.css). Between 1025 and 1279 it is
+// fluid, because the two-column grid column is narrower than the 500px cap:
+// (100vw - 160px container padding - 96px gap) / 2. Verified live against the
+// rendered box: 336-480 -> 250, 600-1024 -> 400, 1100 -> 422, 1200 -> 472,
+// >=1280 -> 500. The calc below reproduces those numbers exactly.
+const ABOUT_SIZES =
+  '(max-width: 480px) 250px, (max-width: 1024px) 400px,' +
+  ' (max-width: 1279px) calc((100vw - 256px) / 2), 500px';
+const aboutSet = (ext) =>
+  [250, 500, 800, 1000].map((w) => `${U}/AboutMePhoto-${w}.${ext} ${w}w`).join(', ');
+const ABOUT_PHOTO_FALLBACK = `${U}/AboutMePhoto-1000.jpg`;
+
+const About = () => {
   const aboutRef = useRef(null);
-  const { imgRef, loaded: photoLoaded, handleLoad, handleError } = useImageLoadSignal(
-    canLoad,
-    onSettled,
-    ABOUT_PHOTO_FALLBACK
+  const { imgRef, loaded: photoLoaded, handleLoad } = useImageLoadState(
+    ABOUT_PHOTO_FALLBACK,
+    aboutSet('jpg')
   );
 
   useEffect(() => {
@@ -45,36 +57,31 @@ const About = ({ canLoad = true, onSettled }) => {
               className="image-container"
               style={{ '--placeholder': `url("${ABOUT_PLACEHOLDER}")` }}
             >
-              {/* Mounted only when the hero photo has settled — step 1 of the
-                  load sequence. The whole <picture> is withheld rather than
-                  just the src, so the browser runs source negotiation once,
-                  with every <source> already in place, and still picks AVIF.
-                  The box is held meanwhile by .image-container's aspect-ratio
-                  and its ::before blur placeholder, so nothing shifts. */}
-              {canLoad && (
-                <picture>
-                  <source
-                    srcSet={process.env.PUBLIC_URL + '/AboutMePhoto-1000.avif'}
-                    type="image/avif"
-                  />
-                  <source
-                    srcSet={process.env.PUBLIC_URL + '/AboutMePhoto-1000.webp'}
-                    type="image/webp"
-                  />
-                  <img
-                    ref={imgRef}
-                    /* src is assigned in a layout effect, after this <img> is
-                       inside the <picture>. See useImageLoadSignal. */
-                    alt="Zeyad Saleh"
-                    className={photoLoaded ? 'is-loaded' : undefined}
-                    width="1000"
-                    height="1333"
-                    decoding="async"
-                    onLoad={handleLoad}
-                    onError={handleError}
-                  />
-                </picture>
-              )}
+              {/* Always mounted — it is no longer gated on the hero photo.
+                  Ordering comes from loading="lazy" plus fetchpriority="low":
+                  the browser holds it back until it is near the viewport and
+                  never lets it contend with the hero, but a slow or broken hero
+                  cannot stop it. The box is held by .image-container's
+                  aspect-ratio and its ::before blur placeholder regardless. */}
+              <picture>
+                <source srcSet={aboutSet('avif')} sizes={ABOUT_SIZES} type="image/avif" />
+                <source srcSet={aboutSet('webp')} sizes={ABOUT_SIZES} type="image/webp" />
+                <img
+                  ref={imgRef}
+                  /* src is assigned in a layout effect, after this <img> is
+                     inside the <picture>. See useImageLoadState. No onError by
+                     design: on failure the blur placeholder stands in. */
+                  sizes={ABOUT_SIZES}
+                  alt="Zeyad Saleh"
+                  className={photoLoaded ? 'is-loaded' : undefined}
+                  width="1000"
+                  height="1333"
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="low"
+                  onLoad={handleLoad}
+                />
+              </picture>
             </div>
           </div>
           <div className="about-text">
