@@ -33,3 +33,18 @@ if (!window.IntersectionObserver) {
   };
   global.IntersectionObserver = window.IntersectionObserver;
 }
+
+// react-three-fiber's <Canvas> measures its container with react-use-measure,
+// which constructs a ResizeObserver unconditionally. jsdom has none, so without
+// this the component throws before rendering. It never reports a size, and
+// r3f only creates a WebGL root once the measured rect is non-zero
+// (react-three-fiber.esm.js: `if (containerRect.width > 0 && ...)`), so the
+// canvas stays an inert DOM element and no WebGL context is ever needed.
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+  global.ResizeObserver = window.ResizeObserver;
+}

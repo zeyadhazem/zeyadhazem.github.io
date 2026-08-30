@@ -3,7 +3,6 @@ import { Canvas } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Stage } from '@react-three/drei';
 import { projects } from '../constants';
 import './Projects.css';
-import Loader from '../Loader';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
@@ -14,13 +13,23 @@ gsap.registerPlugin(ScrollTrigger);
 // path of every card. Byte-identical file, served from our own origin.
 const ENVIRONMENT = { files: process.env.PUBLIC_URL + '/hdri/potsdamer_platz_1k.hdr' };
 
+// The models are Draco-compressed, which needs a decoder. drei defaults that to
+// https://www.gstatic.com/draco/... (Gltf.js:8) — a third-party CDN we do not
+// want on a first-party site. Passing a string as useGLTF's second argument is
+// drei's own supported override (Gltf.js:18,
+// `dracoLoader.setDecoderPath(typeof useDraco === 'string' ? useDraco : decoderPath)`),
+// so this points DRACOLoader at public/draco/ with no monkey-patching.
+// Trailing slash is required: DRACOLoader concatenates decoderPath + filename.
+export const DRACO_DECODER_PATH = process.env.PUBLIC_URL + '/draco/';
+
 const Model = ({ modelPath, scale = 1, position = [0, 0, 0] }) => {
-  const { scene } = useGLTF(modelPath);
+  const { scene } = useGLTF(modelPath, DRACO_DECODER_PATH);
   return <primitive object={scene} scale={scale} position={position} />;
 };
 
 // Rendered as a Suspense child, so it can only mount once the model's fetch has
-// resolved. That is the signal used to retire the skeleton.
+// resolved. That is the signal used to retire the placeholder and advance the
+// load sequence to the next model.
 const ModelReady = ({ onReady }) => {
   useEffect(() => {
     onReady();
@@ -31,8 +40,11 @@ const ModelReady = ({ onReady }) => {
 // react-three-fiber re-throws anything the canvas subtree throws into the outer
 // React tree (react-three-fiber.esm.js:62, `if (error) throw error`). Without a
 // boundary a single failed asset fetch unmounts the whole React root and the
-// page goes blank. Scoped to one canvas so a failure costs one card, not the site.
-class CanvasErrorBoundary extends Component {
+// page goes blank. Scoped to one canvas so a failure costs one card, not the
+// site. onFail also advances the load sequence, so one dead model cannot freeze
+// every model behind it. Exported for direct testing: in jsdom the canvas never
+// gets a non-zero rect, so no real model load can be provoked through <Canvas>.
+export class CanvasErrorBoundary extends Component {
   state = { failed: false };
 
   static getDerivedStateFromError() {
@@ -50,61 +62,37 @@ class CanvasErrorBoundary extends Component {
   }
 }
 
-const ProjectCard = ({ project, index }) => {
-  const cardRef = useRef(null);
-  const visualRef = useRef(null);
-  const [modelInView, setModelInView] = useState(false);
+const ProjectCard = ({ project, index, canLoad, onSettled }) => {
   const [modelReady, setModelReady] = useState(false);
   const [modelFailed, setModelFailed] = useState(false);
+  // The chain must advance exactly once per model, on success or on failure.
+  const settledRef = useRef(false);
+
+  const settle = useCallback(() => {
+    if (settledRef.current) return;
+    settledRef.current = true;
+    onSettled?.(index);
+  }, [onSettled, index]);
+
   // Stable identity so <ModelReady>'s effect does not re-run on every render.
-  const handleModelReady = useCallback(() => setModelReady(true), []);
+  const handleModelReady = useCallback(() => {
+    setModelReady(true);
+    settle();
+  }, [settle]);
+
   const handleModelFail = useCallback(() => {
     setModelFailed(true);
     setModelReady(false);
-  }, []);
+    settle();
+  }, [settle]);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-in');
-          }
-        });
-      },
-      { threshold: 0.2 }
-    );
-
-    if (cardRef.current) {
-      observer.observe(cardRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Defer the .glb fetch until the canvas is close to the viewport, so several
-  // MB of model data never competes with first paint.
-  useEffect(() => {
-    const node = visualRef.current;
-    if (!node) return undefined;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setModelInView(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '600px 0px' }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
+  // No IntersectionObserver here on purpose. The card used to reveal itself by
+  // adding .animate-in from an observer callback; the card's copy is now
+  // visible from first paint (see Projects.css) so there is nothing to reveal,
+  // and no JS stands between a visitor and the text.
 
   return (
     <div
-      ref={cardRef}
       className={`project-card ${index % 2 === 1 && index !== 2 ? 'reverse' : ''}`}
       style={{ '--accent-color': project.color }}
     >
@@ -124,19 +112,21 @@ const ProjectCard = ({ project, index }) => {
           ))}
         </ul>
       </div>
-      <div className="project-visual" ref={visualRef}>
+      <div className="project-visual">
         <div className="model-container">
           <div
-            className={`model-skeleton${modelReady ? ' is-hidden' : ''}${modelFailed ? ' is-static' : ''}`}
+            className={`model-placeholder${modelReady ? ' is-hidden' : ''}${modelFailed ? ' is-failed' : ''}`}
             aria-hidden="true"
           />
-          {modelInView && !modelFailed && (
+          {canLoad && !modelFailed && (
             <CanvasErrorBoundary onFail={handleModelFail}>
               <Canvas camera={{
                 position: project.cameraPosition,
                 fov: 45
               }}>
-                <Suspense fallback={<Loader />}>
+                {/* No fallback element: the flat .model-placeholder behind the
+                    canvas already holds the box at every breakpoint. */}
+                <Suspense fallback={null}>
                   <Stage environment={ENVIRONMENT} intensity={0.8} adjustCamera={false}>
                     <Model
                       modelPath={project.model}
@@ -166,7 +156,7 @@ const ProjectCard = ({ project, index }) => {
   );
 };
 
-const Projects = () => {
+const Projects = ({ loadedModelCount = projects.length, onModelSettled }) => {
   const sectionRef = useRef(null);
 
   useEffect(() => {
@@ -199,7 +189,13 @@ const Projects = () => {
         </div>
         <div className="projects-grid">
           {projects.map((project, index) => (
-            <ProjectCard key={project.id} project={project} index={index} />
+            <ProjectCard
+              key={project.id}
+              project={project}
+              index={index}
+              canLoad={index < loadedModelCount}
+              onSettled={onModelSettled}
+            />
           ))}
         </div>
       </div>

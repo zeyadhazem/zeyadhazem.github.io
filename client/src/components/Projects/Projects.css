@@ -23,14 +23,19 @@
   gap: 120px;
 }
 
+/* No opacity/transform entrance state here, deliberately. The card's text used
+   to start at opacity 0 and become visible only when an IntersectionObserver
+   added .animate-in, then fade in over a 1s transition with a per-card delay.
+   Measured on a cold, throttled load: the 3D model became visible at 583ms
+   while the card text did not reach readable opacity until 1315ms — the
+   graphic beat its own card by 732ms. Card copy must never be gated behind JS
+   that the 3D area can outrun, so the card is now visible from first paint.
+   The reveal on .projects-header is untouched; it has no such dependency. */
 .project-card {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-xxxl);
   align-items: center;
-  opacity: 0;
-  transform: translateY(60px);
-  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
   padding: var(--spacing-xxl);
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.02);
@@ -53,11 +58,6 @@
 
 .project-card:hover::before {
   opacity: 1;
-}
-
-.project-card.animate-in {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .project-card.reverse {
@@ -178,75 +178,39 @@
   touch-action: pan-y pinch-zoom !important;
 }
 
-/* Fills the box .project-visual already fixes (500 / 400 / 300 / 250px by
-   breakpoint) so the canvas area is never blank while several MB of .glb
-   downloads, and retires once the model resolves. Greys are the existing
-   --color-bg-secondary / --color-bg-tertiary. */
-.model-skeleton {
+/* Holds the box .project-visual already fixes (500 / 400 / 300 / 250px by
+   breakpoint) so the canvas area never collapses while a model downloads, then
+   fades out once the model is up. Deliberately quiet: a flat --color-bg-secondary
+   surface, no animation and no text, so it reads as part of the card rather
+   than as a loading graphic. */
+.model-placeholder {
   position: absolute;
   inset: 0;
   border-radius: 20px;
-  background:
-    linear-gradient(
-      100deg,
-      rgba(255, 255, 255, 0) 30%,
-      rgba(255, 255, 255, 0.05) 50%,
-      rgba(255, 255, 255, 0) 70%
-    ),
-    radial-gradient(circle at 50% 45%, var(--color-bg-tertiary) 0%, var(--color-bg-secondary) 60%, transparent 100%);
-  background-size: 250% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  animation: modelSkeletonSweep 1.8s ease-in-out infinite;
+  background: var(--color-bg-secondary);
   opacity: 1;
   transition: opacity var(--transition-emphasized);
   pointer-events: none;
   z-index: 1;
 }
 
-/* Stop the sweep and take the element out of paint once the model is up.
-   `background-position` is not compositor-accelerated, so leaving it animating
-   behind opacity: 0 would repaint three full-size elements on the main thread
-   for the life of the page, competing with three live WebGL contexts.
-   visibility is transitioned with a delay so the fade still plays first. */
-.model-skeleton.is-hidden {
+/* Take it out of paint entirely once the model is up, rather than leaving a
+   full-size invisible element compositing behind three live WebGL contexts.
+   visibility is delayed by the fade duration so the transition still plays. */
+.model-placeholder.is-hidden {
   opacity: 0;
   visibility: hidden;
-  animation: none;
   transition: opacity var(--transition-emphasized), visibility 0s linear 0.5s;
 }
 
-/* Model failed to load: hold the exact box with a still block rather than a
-   shimmer that would promise a model which is never coming. */
-.model-skeleton.is-static {
-  animation: none;
-}
-
-@keyframes modelSkeletonSweep {
-  from {
-    background-position: 150% 0, 0 0;
-  }
-  to {
-    background-position: -50% 0, 0 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .model-skeleton {
-    animation: none;
-  }
-}
-
-.model-loader-text {
-  font-size: var(--font-size-body-reduced);
-  font-weight: 500;
-  letter-spacing: -0.022em;
-  color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+/* Model failed to load. Holds the same box; only the surface tone differs, so
+   the state is distinguishable on inspection without announcing itself. */
+.model-placeholder.is-failed {
+  background: var(--color-bg-tertiary);
 }
 
 @media (max-width: 768px) {
-  .model-skeleton {
+  .model-placeholder {
     border-radius: 16px;
   }
 }
@@ -318,17 +282,4 @@
   .project-visual {
     height: 250px;
   }
-}
-
-/* Animation delays for staggered effect */
-.project-card:nth-child(1) {
-  transition-delay: 0.1s;
-}
-
-.project-card:nth-child(2) {
-  transition-delay: 0.2s;
-}
-
-.project-card:nth-child(3) {
-  transition-delay: 0.3s;
 }
